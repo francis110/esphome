@@ -16,10 +16,8 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend({
 
 # Function to generate code from the configuration
 def to_code(config):
-    # Declare the sensor as a variable
     var = cg.new_Pvariable(config[const.CONF_ID])
-    
-    # Register component and sensor within ESPHome
+    text_sensor = yield text_sensor.new_text_sensor(config)
+    var.set_text_sensor(text_sensor)
     yield cg.register_component(var, config)
     yield uart.register_uart_device(var, config)
-    yield text_sensor.register_text_sensor(var, config)

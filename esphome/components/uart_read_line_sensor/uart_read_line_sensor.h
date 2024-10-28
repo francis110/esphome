@@ -1,24 +1,40 @@
-#ifndef UART_TEXT_SENSOR_H
-#define UART_TEXT_SENSOR_H
+#pragma once
 
-#include <string>
-#include <functional>
+#include "esphome/core/component.h"
+#include "esphome/components/uart/uart.h"
+#include "esphome/components/text_sensor/text_sensor.h"
 
-class UartTextSensor {
-public:
-  UartTextSensor(uint8_t rx_pin, uint8_t tx_pin, uint32_t baud_rate);
-  ~UartTextSensor();
+namespace esphome {
+namespace uart_read_line_sensor {
 
-  void setup();
-  void loop();
+class UartReadLineSensor : public Component, public uart::UARTDevice {
+ public:
+  void setup() override {
+    // Any setup code, if necessary
+  }
 
-  // Function to be called when data is received from serial
-  void on_data_received(const std::string& data, std::function<void(float)> callback);
+  void loop() override {
+    while (this->available()) {
+      String line = this->read_line();
+      if (!line.isEmpty()) {
+        this->publish_line(line);
+      }
+    }
+  }
 
-private:
-  HardwareSerial* _uart;
-  std::string _received_data;
-  std::function<void(float)> _data_callback;
+  void publish_line(const String &line) {
+    if (this->text_sensor_) {
+      this->text_sensor_->publish_state(line);
+    }
+  }
+
+  void set_text_sensor(text_sensor::TextSensor *text_sensor) {
+    this->text_sensor_ = text_sensor;
+  }
+
+ protected:
+  text_sensor::TextSensor *text_sensor_;
 };
 
-#endif // UART_TEXT_SENSOR_H
+}  // namespace uart_read_line_sensor
+}  // namespace esphome
